@@ -1,0 +1,276 @@
+class Vector{
+  float[] vals;
+  Vector(float x, float y){
+    vals = new float[2];
+    vals[0] = x;
+    vals[1] = y;
+  }
+  Vector(float x, float y, float z){
+    vals = new float[3];
+    vals[0] = x;
+    vals[1] = y;
+    vals[2] = z;
+  }
+  Vector(float[] values){
+    vals = values; 
+  }
+  Vector(int dim){
+    vals = new float[dim];
+  }
+  
+  float x(){return vals[0];}
+  float y(){return vals[1];}
+  float z(){return vals[2];}
+  
+  float get(int id){return vals[id];}
+  void set(int id, float val){vals[id] = val;}
+  
+  void draw(float diameter){
+    if(vals.length == 2){
+      ellipse(vals[0], vals[1], diameter, diameter);
+    }
+  }
+  
+  void print(){
+    (new Matrix(this)).print();
+  }
+}
+
+class Matrix{
+  final int dimX, dimY;
+  float[][] vals;
+  Matrix(int rowCount, int colCount){
+    vals = new float[rowCount][colCount];  
+    dimX = rowCount;
+    dimY = colCount;
+  }
+  Matrix( float I,   float II,   float III,
+          float IV,  float V,    float VI,
+          float VII, float VIII, float IX){
+    dimY = 3;
+    dimX = 3;
+    vals = new float[3][3];
+    vals[0][0] = I;
+    vals[0][1] = II;
+    vals[0][2] = III;
+    vals[1][0] = IV;
+    vals[1][1] = V;
+    vals[1][2] = VI;
+    vals[2][0] = VII;
+    vals[2][1] = VIII;
+    vals[2][2] = IX;
+  }
+  Matrix( float I,   float II,   
+          float III, float IV){
+    dimY = 2;
+    dimX = 2;
+    vals = new float[2][2];
+    vals[0][0] = I;
+    vals[0][1] = II;
+    vals[1][0] = III;
+    vals[1][1] = IV;
+  }
+  Matrix(float I){
+    dimY = 1;
+    dimX = 1;
+    vals = new float[1][1];
+    vals[0][0] = I;
+  }
+  Matrix(float[][] vals){
+    this.vals = vals;
+    dimX = vals.length;
+    dimY = vals[0].length;
+  }
+  Matrix(Vector vec){
+    vals = new float[vec.vals.length][1];
+    for(int row=0; row < vec.vals.length; row++){
+      vals[row][0] = vec.vals[row];
+    }
+    dimX = 1;
+    dimY = vec.vals.length;
+  }
+  
+  Vector dot(Vector vec){
+    Vector retVal = new Vector(dimY);
+    for (int row=0; row < dimX; row++){
+      float sum = 0f;
+        for(int col=0; col < dimY; col++){
+          sum += vals[row][col] * vec.get(col);
+        }
+        retVal.set(row, sum);
+    }
+    return retVal;
+  }
+  Matrix dot(Matrix mat){
+    Matrix retVal = new Matrix(vals[0].length, mat.rows());
+    for(int x=0; x < retVal.vals.length; x++){
+      for(int y=0; y < retVal.vals[x].length; y++){
+        float curValue = 0f;
+        for(int id=0; id < mat.vals.length; id++){
+          curValue += this.vals[x][id] * mat.vals[id][y]; 
+        }
+        retVal.vals[x][y] = curValue;
+      }
+    }
+    return retVal;
+  }
+  
+  float get(int rowId, int colId){return vals[rowId][colId];}
+  void set(int rowId, int colId, float value){vals[rowId][colId] = value;}
+  
+  int rows(){return vals.length;}
+  int cols(){return vals[0].length;}
+  
+  Vector row(int rowId){return new Vector(vals[rowId]);}
+  
+  Vector column(int colId){
+    Vector vec = new Vector(vals[0].length);
+    for(int row=0; row < dimY; row++){
+      vec.set(row, vals[row][colId]);
+    }
+    return vec;
+  }
+  
+  void print(){
+    println("--------------------");
+    for(int row=0; row < dimY; row++){
+      StringBuilder curRowStr = new StringBuilder("| ");
+      for(int col=0; col < dimX; col++){
+          curRowStr.append(vals[row][col] + (col == dimX-1 ? "" : "  ") );
+      }
+      curRowStr.append(" |");
+      println(curRowStr);
+    }
+    println("--------------------");
+  }
+}
+
+Matrix createRotationMatrix2DAngle(float angle){
+  float radians = radians(angle);
+  return new Matrix(cos(radians), -sin(radians),
+                    sin(radians), cos(radians));
+}
+Matrix createRotationMatrix2DRadians(float radians){
+  return new Matrix(cos(radians), -sin(radians),
+                    sin(radians), cos(radians));
+}
+
+Matrix createRotationMatrix3DAngleX(float angle){
+  float radians = radians(angle);
+  return new Matrix(1f,   0f,             0f,
+                    0f,   cos(radians),   -sin(radians),
+                    0f,   sin(radians),   cos(radians));
+}
+Matrix createRotationMatrix3DAngleY(float angle){
+  float radians = radians(angle);
+  return new Matrix(cos(radians),   0f,              sin(radians),
+                    0f,             1f,              0f,
+                    -sin(radians),  0f,              cos(radians));
+}
+Matrix createRotationMatrix3DAngleZ(float angle){
+  float radians = radians(angle);
+  return new Matrix(cos(radians),   -sin(radians),    0f,
+                    sin(radians),   cos(radians),     0f,
+                    0f,             0f,               1f);
+}
+
+Vector vec;
+
+Matrix mat     = new Matrix( new float[][]{ {1f, 0f}, 
+                                            {0f, 1f}} );
+Matrix mat2    = new Matrix( new float[][]{ {2f, 2f}, 
+                                            {3f, 2f}} );
+  
+
+void setup() {
+  size(640, 480, P3D);
+  surface.setResizable(true);
+  
+  lights();
+   
+  //background(0, 0, 0);
+  background(255, 255, 255);
+  
+  vec = new Vector(width * 0.25f, width * 0.25f, width * 0.25f);
+}
+
+float angle = 0f;
+
+void draw(){  
+  translate(width/2, height/2);
+  ellipseMode(CENTER);
+  
+  background(255);
+  
+  printAxis();
+  
+  rotate(0
+}
+
+//void draw() {
+  
+//  clear();
+  
+//  printAxis();
+  
+//  translate(width/2, height/2);
+//  ellipseMode(CENTER);
+
+//  fill(180,180,180);
+//  ellipse(0,0, 2,2);
+  
+//  //fill(0, 255, 0);
+//  //vec.draw(2);
+  
+//  //Matrix rotationMatrix = createRotationMatrix2DAngle(angle);
+//  //Vector rotatedVector = rotationMatrix.dot(vec);
+//  //rotatedVector.draw(4);
+  
+//  Matrix rotationX = createRotationMatrix3DAngleX(angle);
+//  //Matrix rotationY = createRotationMatrix3DAngleY(angle);
+//  //Matrix rotationZ = createRotationMatrix3DAngleZ(angle);
+//  //Matrix rotationTotal = rotationZ.dot(rotationY.dot(rotationX));
+  
+//  Vector rotatedVector = rotationX.dot(vec);
+  
+//  pushMatrix();
+//  translate(vec.x(), vec.z(), vec.y());
+//  fill(0,255,0);
+//  stroke(255);
+//  sphere(2);
+//  popMatrix();
+  
+//  pushMatrix();
+//  translate(rotatedVector.x(), rotatedVector.y(), rotatedVector.z());
+//  fill(0,255,0);
+//  stroke(255);
+//  sphere(2);
+//  popMatrix();
+  
+//  float da = 0.5f;
+//  angle = (angle + da) % 360;
+//}
+
+void printAxis(){
+  
+  float lineWidth = 300f;
+  // x: red
+  stroke(255,0,0);
+  line(0,0,0, lineWidth,0,0);
+  //for(int x=0; x < 400; x+=(int)radius){
+  //  pushMatrix();
+  //  translate(x, 0, 0);
+  //  fill(0,255,0);
+  //  sphere(radius*2f);
+  //  popMatrix();
+  //}
+  //line(0,0,0, lineWidth,lineWidth,lineWidth);
+  
+  // y: green
+  stroke(0, 255, 0);
+  line(0,0,0, 0,lineWidth,0);
+  
+  // z: blue
+  stroke(0, 0, 255);
+  line(0,0,0, 0,0,lineWidth);
+}
